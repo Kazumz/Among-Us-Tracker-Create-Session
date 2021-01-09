@@ -38,21 +38,21 @@ namespace AU.CreateSession.Function
         {
             try
             {
-                var createSessionRequest = await req.GetBodyAsync<CreateSessionRequest>();
-                logger.LogInformation($"Processing Request {JsonConvert.SerializeObject(createSessionRequest.Value)}");
+                var request = await req.GetBodyAsync<CreateSessionRequest>();
+                logger.LogInformation($"Processing Request {JsonConvert.SerializeObject(request.Value)}");
 
-                if (createSessionRequest.IsValid)
+                if (request.IsValid && request.Value.Validate())
                 {
-                    var players = mapper.Map<List<PlayerRequest>, List<Player>>(createSessionRequest.Value.Players);
+                    var players = mapper.Map<List<PlayerRequest>, List<Player>>(request.Value.Players);
 
-                    var sessionId = await handler.CreateSession(createSessionRequest.Value.SessionId, players);
+                    var sessionId = await handler.CreateSession(request.Value.SessionId, players);
 
                     logger.LogInformation($"Processing Request Succeeded for Session ID: {sessionId}");
                     return new OkObjectResult(new CreateSessionResponse { SessionId = sessionId });
                 }
                 else
                 {
-                    return new BadRequestObjectResult($"Request is invalid: {string.Join(", ", createSessionRequest.ValidationResults.Select(s => s.ErrorMessage).ToArray())}");
+                    return new BadRequestObjectResult($"Request is invalid: {string.Join(", ", request.ValidationResults.Select(s => s.ErrorMessage).ToArray())}");
                 }
             }
             catch (Exception e)
