@@ -35,10 +35,11 @@ namespace AU.CreateSession.Function
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger logger)
         {
+            var requestGuid = Guid.NewGuid();
+
             try
             {
                 var request = await req.GetBodyAsync<CreateSessionRequest>();
-                var requestGuid = Guid.NewGuid();
                 logger.LogInformation($"{requestGuid} - Processing Request {JsonConvert.SerializeObject(request.Value)}");
 
                 if (!request.IsValid)
@@ -63,7 +64,7 @@ namespace AU.CreateSession.Function
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failure in Create Session Function. Unable to process");
+                logger.LogError(e, $"{requestGuid} - Failure in Create Session Function. Unable to process");
                 throw;
             }
         }
