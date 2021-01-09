@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AU.CreateSession.Domain.CreateSession;
@@ -39,21 +38,28 @@ namespace AU.CreateSession.Function
             try
             {
                 var request = await req.GetBodyAsync<CreateSessionRequest>();
-                logger.LogInformation($"Processing Request {JsonConvert.SerializeObject(request.Value)}");
+                var requestGuid = Guid.NewGuid();
+                logger.LogInformation($"{requestGuid} - Processing Request {JsonConvert.SerializeObject(request.Value)}");
 
-                if (request.IsValid && request.Value.Validate())
+                if (!request.IsValid)
                 {
-                    var players = mapper.Map<List<PlayerRequest>, List<Player>>(request.Value.Players);
-
-                    var sessionId = await handler.CreateSession(request.Value.SessionId, players);
-
-                    logger.LogInformation($"Processing Request Succeeded for Session ID: {sessionId}");
-                    return new OkObjectResult(new CreateSessionResponse { SessionId = sessionId });
+                    var message = $"Request is invalid: {string.Join(", ", request.ValidationResults.Select(s => s.ErrorMessage).ToArray())}";
+                    logger.LogError($"{requestGuid} - {message}");
+                    return new BadRequestObjectResult(message);
                 }
-                else
+
+                if (!request.Value.Validate())
                 {
-                    return new BadRequestObjectResult($"Request is invalid: {string.Join(", ", request.ValidationResults.Select(s => s.ErrorMessage).ToArray())}");
+                    var message = $"Request data failed validation.";
+                    logger.LogError($"{requestGuid} - {message}");
+                    return new BadRequestObjectResult(message);
                 }
+
+                var players = mapper.Map<List<PlayerRequest>, List<Player>>(request.Value.Players);
+                var sessionId = await handler.CreateSession(request.Value.SessionId, players);
+
+                logger.LogInformation($"{requestGuid} - Processing Request Succeeded for Session ID: {sessionId}");
+                return new OkObjectResult(new CreateSessionResponse { SessionId = sessionId });
             }
             catch (Exception e)
             {
