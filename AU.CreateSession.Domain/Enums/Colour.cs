@@ -14,6 +14,12 @@
         Purple,
         Red,
         White,
-        Yellow
+        Yellow,
+        Banana,
+        Coral,
+        Grey,
+        Maroon,
+        Rose,
+        Tan,
     }
 }
