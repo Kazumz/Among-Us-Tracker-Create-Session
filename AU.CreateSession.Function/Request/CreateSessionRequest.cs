@@ -20,7 +20,7 @@ namespace AU.CreateSession.Function.Request
             return 
                 request.Players != null &&
                 request.Players.Count > 0 &&
-                request.Players.Count <= 13 &&
+                request.Players.Count <= 18 &&
                 request.Players.All(x => x.Validate());
         }
     }
